@@ -2,7 +2,10 @@ import React, { Component } from 'react'
 
 export default class DogCard extends Component {
   render() {
-    const { picture } = this.props.dog;
+    const { dog } = this.props;
+    if (!dog) return null;
+
+    const { picture } = dog;
 
     return (
       <li>

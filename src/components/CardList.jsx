@@ -3,9 +3,11 @@ import DogCard from './DogCard';
 
 export default class CardList extends Component {
   render() {
+    const { dogList } = this.props;
+
     return (
       <ul>
-        <DogCard dog={{}} />
+        { dogList.map((dog) => <DogCard dog={dog} key={dog.picture} />) }
       </ul>
     );
   }

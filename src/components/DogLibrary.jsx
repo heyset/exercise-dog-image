@@ -11,9 +11,21 @@ export default class DogLibrary extends Component {
       currentDog: {},
       loading: true,
       firstLoad: true,
+      dogList: [],
     }
 
     this.fetchDog = this.fetchDog.bind(this);
+    this.addDogToList = this.addDogToList.bind(this)
+  }
+
+  addDogToList() {
+    this.setState((prev) => {
+      const dogList = [...prev.dogList];
+
+      dogList.push(prev.currentDog);
+
+      return { dogList };
+    })
   }
 
   fetchDog() {
@@ -44,7 +56,7 @@ export default class DogLibrary extends Component {
   }
 
   render() {
-    const { firstLoad, loading, currentDog } = this.state;
+    const { firstLoad, loading, currentDog, dogList } = this.state;
 
     return (
       firstLoad ? <p>Carregando...</p>
@@ -52,8 +64,8 @@ export default class DogLibrary extends Component {
       <main>
         {loading ? <li>Carregando...</li> : <DogCard dog={currentDog} />}
         <button onClick={this.fetchDog}>Pega!</button>
-        <button>Adicionar dog</button>
-        <CardList />
+        <button onClick={this.addDogToList}>Adicionar dog</button>
+        <CardList dogList={dogList} />
         <p>Remover dog? Ta doido(a)?</p>
       </main>
     )
