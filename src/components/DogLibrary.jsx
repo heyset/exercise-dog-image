@@ -15,16 +15,30 @@ export default class DogLibrary extends Component {
     }
 
     this.fetchDog = this.fetchDog.bind(this);
-    this.addDogToList = this.addDogToList.bind(this)
+    this.addDogToList = this.addDogToList.bind(this);
+    this.changeDogName = this.changeDogName.bind(this)
   }
 
-  addDogToList() {
+  addDogToList(e) {
+    e.preventDefault();
     this.setState((prev) => {
       const dogList = [...prev.dogList];
 
       dogList.push(prev.currentDog);
+      this.fetchDog();
 
       return { dogList };
+    }, () => this.saveDogList());
+  }
+
+  changeDogName(e) {
+    const currentUserInput = e.target.value
+    this.setState(({currentDog}) => {
+      const newDogState = {...currentDog};
+
+      newDogState.name = currentUserInput;
+
+      return {currentDog: newDogState};
     })
   }
 
@@ -34,25 +48,54 @@ export default class DogLibrary extends Component {
       fetch(BASE_URL)
         .then((response) => response.json())
         .then((jsonData) => {
-          if (jsonData.status === 'success') {
+          const { message, status } = jsonData;
+
+          if (status === 'success') {
+            const indexOfBreeds = message.search(/\/breeds\//);
+            const endPortion = message.slice(indexOfBreeds + 8);
+            const indexOfNextSlash = endPortion.search(/\//);
+            const breed = endPortion.slice(0, indexOfNextSlash);
+
             this.setState({
-              currentDog: {picture: jsonData.message},
+              currentDog: {picture: message, breed, name: ''},
               loading: false,
             });
             resolve();
             return;
           }
 
-          throw new Error(jsonData.message);
+          throw new Error(message);
         })
       .catch((error) => alert(`Eita! ${error}`));
     })
+  }
+
+  loadDogList() {
+    if (!Storage || !localStorage) return;
+
+    try {
+      const parsedDogList = JSON.parse(localStorage.getItem('dog-list'));
+      if (!parsedDogList) return;
+
+      this.setState({
+        dogList: parsedDogList,
+      });
+    } catch (e) {
+      return console.error(e);
+    }
+  }
+
+  saveDogList() {
+    if (!Storage || !localStorage) return;
+
+    localStorage.setItem('dog-list', JSON.stringify(this.state.dogList));
   }
 
   componentDidMount() {
     this.fetchDog()
       .then(() => this.setState({firstLoad: false}))
     .catch(() => alert('ue'));
+    this.loadDogList();
   }
 
   render() {
@@ -63,10 +106,14 @@ export default class DogLibrary extends Component {
       : 
       <main>
         {loading ? <li>Carregando...</li> : <DogCard dog={currentDog} />}
+        <p>{currentDog.breed}</p>
+        <form onSubmit={this.addDogToList}>          
+          <input type="text" placeholder="Nomeie o dog" value={this.state.currentDog.name} onChange={this.changeDogName}/>
+          <button type="submit">Adicionar dog</button>
+        </form>
         <button onClick={this.fetchDog}>Pega!</button>
-        <button onClick={this.addDogToList}>Adicionar dog</button>
         <CardList dogList={dogList} />
-        <p>Remover dog? Ta doido(a)?</p>
+        <button onClick={() => alert('Remover dog? Ta doido(a)?!')}>Remover dog</button>
       </main>
     )
   }
